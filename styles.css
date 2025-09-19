@@ -1,0 +1,432 @@
+/* Reset & font */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #f4f6f9;
+    color: #333;
+    line-height: 1.4;
+}
+
+/* Header Sticky */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: linear-gradient(135deg, #00c6ff, #2196f3, #0d47a1);
+    color: #fff;
+    padding: 1.5rem 1rem;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.header-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.logo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: white;
+    padding: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    display: block;
+    margin: 0 auto;
+}
+
+/* Search Input */
+#searchInput {
+    flex: 100%;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    font-size: 1rem;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#searchInput:focus {
+    border-color: #2196f3;
+    box-shadow: 0 0 6px rgba(33, 150, 243, 0.4);
+}
+
+/* Warna option filter */
+#filterSelect option[value="kosong"] {
+    background-color: #2ecc71;
+    color: #fff;
+}
+
+#filterSelect option[value="terisi"] {
+    background-color: #ffffff;
+    color: #333;
+}
+
+.header-text h1 {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.header-text p {
+    margin-top: 0.3rem;
+    font-size: 1rem;
+    opacity: 0.95;
+}
+
+/* Main */
+main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Toolbar Sticky */
+.toolbar {
+    position: sticky;
+    top: 60px;
+    background: #f4f6f9;
+    z-index: 999;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toolbar input,
+.toolbar select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    flex: 1;
+    min-width: 140px;
+}
+
+/* === Grid Lapak === */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 15px;
+}
+
+/* Responsif grid */
+@media (max-width: 1200px) {
+    .grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* === Card Lapak === */
+.lapak {
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    word-break: break-word;
+    user-select: none;
+    transition: none !important;
+    transform: none !important;
+}
+
+.lapak:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    opacity: 0.9;
+    transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+}
+
+.lapak-no {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+}
+
+.lapak-no .number {
+    color: #0D47A1;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.lapak-separator {
+    border: 0;
+    border-top: 1px solid #ddd;
+    margin: 6px 0;
+}
+
+.lapak-nama {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 4px;
+}
+
+.lapak-inside {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: blue;
+    margin-top: 4px;
+}
+
+/* Status */
+.lapak.kosong {
+    background: #2ecc71;
+    color: #fff;
+}
+
+.lapak.terisi {
+    background: #fff;
+    color: #333;
+}
+
+.lapak.warning {
+    background: #e74c3c !important;
+    color: #fff !important;
+    border: 1px solid #c0392b !important;
+}
+
+.lapak.absen-sudah {
+    background: #4caf50;
+    color: #fff;
+}
+
+/* === Modal Tanpa Form === */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 2rem;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content h2 {
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    color: #0d47a1;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #888;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* === Toast === */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    color: #fff;
+    font-weight: bold;
+    display: none;
+    z-index: 2000;
+}
+
+.toast.success {
+    background: #28a745;
+}
+
+.toast.error {
+    background: #dc3545;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-overlay .loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #ddd;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    margin-top: 15px;
+    font-size: 1rem;
+    color: #333;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.pagination button {
+    padding: 6px 12px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.4rem;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .toolbar input,
+    .toolbar select {
+        width: 100%;
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .lapak {
+        font-size: 0.85rem;
+        padding: 12px;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .pagination button {
+        width: 100%;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .lapak {
+        font-size: 0.8rem;
+        padding: 10px;
+    }
+
+    .modal-content {
+        padding: 1rem;
+    }
+
+    .toolbar {
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .toolbar input,
+    .toolbar select {
+        font-size: 0.85rem;
+        padding: 7px;
+    }
+
+    .pagination button {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
