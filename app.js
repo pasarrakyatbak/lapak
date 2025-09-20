@@ -1,312 +1,529 @@
 // =================== Konfigurasi ===================
-const API_URL = "https://script.google.com/macros/s/AKfycbwnf3IcLzgMNXFGAYF8NK4B9rRqd9HkXFuMXFi9de_F0g1GB2KpOq0OS08elQZMBF02nQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby4z2qZ24SrJkcyGpybH29lSUC_3_z1LG-7wSmTzpaOEXrwjXf0Cl3hqkg95qAxPj1-/exec";
 
 let lapakData = [];
-let tidakHadir2x = [];
-let tidakHadir3x = [];
+let filteredData = [];
 let currentPage = 1;
-let pageSize = Infinity;
-let loadingInterval;
+let pageSize = "all";
+let dotsInterval;
 
-// Elemen UI
-const scrollBtn = document.getElementById("scrollToggle");
-const iconUp = document.getElementById("iconUp");
-const iconDown = document.getElementById("iconDown");
-const toggleTheme = document.getElementById('toggleTheme');
-const scrollFab = document.querySelector('.scroll-fab');
+const API_TIDAK_HADIR_2X = `${API_URL}?action=lapakTidakHadir2x`;
+const API_TIDAK_HADIR_3X = `${API_URL}?action=lapakTidakHadir3x`;
+const API_REKAP_ABSENSI = `${API_URL}?action=lihatrekapperlapak`;
+const API_IZIN = `${API_URL}?action=izin`;
+const loading = document.getElementById("loading");
+const grid = document.getElementById("lapakGrid");
+const searchInput = document.getElementById("searchInput");
+const filterSelect = document.getElementById("filterSelect");
+const rangeSelect = document.getElementById("rangeSelect");
+const pageSizeSelect = document.getElementById("pageSizeSelect");
+const paginationNav = document.getElementById("paginationNav");
+const themeBtn = document.getElementById("toggleTheme");
+const fab = document.getElementById("scrollToggle");
+let scrollDown = true;
+// =================== Caching ===================
+const CACHE_KEY = "lapakDataCache";
+const CACHE_EXP_KEY = "lapakDataCacheExp";
+const CACHE_TTL = 5 * 60 * 1000; // 5 menit
 
-
-// =================== Load Data ===================
-async function loadData() {
+function saveCache(data) {
     try {
-        showLoading(true);
-        const res = await fetch(API_URL + "?action=listLapak"); // tambahkan action eksplisit
-        if (!res.ok) {
-            showToast(`Gagal konek ke server (${res.status})`, "error");
-            return;
-        }
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_EXP_KEY, Date.now() + CACHE_TTL);
+    } catch (e) {
+        console.warn("❌ Gagal simpan cache:", e);
+    }
+}
 
-        const data = await res.json();  // langsung parse JSON
-        console.log("Respon server:", data);
+function loadCache() {
+    try {
+        const exp = localStorage.getItem(CACHE_EXP_KEY);
+        if (!exp || Date.now() > parseInt(exp)) return null; // expired
+        const data = JSON.parse(localStorage.getItem(CACHE_KEY));
+        return Array.isArray(data) ? data : null;
+    } catch (e) {
+        console.warn("❌ Gagal baca cache:", e);
+        return null;
+    }
+}
 
-        // Pastikan bentuk sesuai
-        lapakData = Array.isArray(data.data) ? data.data : [];
-        pageSize = lapakData.length || 1;
+function clearCache() {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_EXP_KEY);
+}
 
-        const pageSizeSelect = document.getElementById("pageSizeSelect");
-        if (pageSizeSelect) pageSizeSelect.value = "all";
+// =================== Utility ===================
+function parseNamaBarang(rawNama) {
+    if (!rawNama) return { nama: "-", barang: "-" };
+    const match = rawNama.match(/^(.*?)\s*\((.*?)\)$/);
+    if (match) return { nama: match[1].trim(), barang: match[2].trim() };
+    return { nama: rawNama, barang: "-" };
+}
 
-        await loadTidakHadirData();
-        generateRangeOptions();
+function showLoading(state) {
+    loading.classList.toggle("active", state);
+    state ? startDots() : stopDots();
+}
+
+function startDots() {
+    const dots = document.getElementById("dots");
+    let count = 0;
+    dotsInterval = setInterval(() => {
+        count = (count + 1) % 4;
+        dots.textContent = ".".repeat(count);
+    }, 500);
+}
+
+function stopDots() {
+    clearInterval(dotsInterval);
+    document.getElementById("dots").textContent = "";
+}
+
+// =================== Toast ===================
+function showToast(msg, retryCallback = null) {
+    const toast = document.getElementById("toast");
+    toast.innerHTML = "";
+    toast.classList.remove("show");
+
+    const isDark = document.body.classList.contains("dark");
+    toast.style.background = isDark ? "rgba(50,50,50,0.9)" : "rgba(50,50,50,0.85)";
+    toast.style.color = isDark ? "#eee" : "#fff";
+
+    const text = document.createElement("span");
+    text.textContent = msg;
+    toast.appendChild(text);
+
+    if (retryCallback) {
+        const btn = document.createElement("button");
+        btn.textContent = "🔄 Coba Lagi";
+        btn.style.marginLeft = "10px";
+        btn.style.border = "none";
+        btn.style.background = "#2193b0";
+        btn.style.color = "#fff";
+        btn.style.padding = "0.2rem 0.5rem";
+        btn.style.borderRadius = "0.4rem";
+        btn.style.cursor = "pointer";
+        btn.onclick = () => { retryCallback(); toast.classList.remove("show"); };
+        toast.appendChild(btn);
+    }
+
+    toast.classList.add("show");
+    if (!retryCallback) setTimeout(() => toast.classList.remove("show"), 5000);
+}
+
+// =================== Fetch Data ===================
+async function fetchLapak() {
+    showLoading(true);
+    try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error("Gagal ambil data dari server");
+        const json = await res.json();
+        lapakData = Array.isArray(json.data) ? json.data : [];
+        if (lapakData.length > 0) generateRangeOptions();
+        filteredData = [...lapakData];
         renderGrid();
-
+        saveCache(lapakData);
     } catch (err) {
-        console.error(err);
-        showToast("Terjadi kesalahan koneksi!", "error");
+        showToast("❌ " + err.message, fetchLapak);
     } finally {
         showLoading(false);
     }
 }
 
-async function loadTidakHadirData() {
-    try {
-        const [res2x, res3x] = await Promise.all([
-            fetch(API_URL + "?action=lapakTidakHadir2x"),
-            fetch(API_URL + "?action=lapakTidakHadir3x")
-        ]);
+// =================== Render ===================
+function renderLapakCard(item) {
+    const { nama, barang } = parseNamaBarang(item.nama);
+    let statusClass = "status-default";
+    let statusText = "-";
 
-        tidakHadir2x = res2x.ok ? (await res2x.json()).lapakTidakHadir2x || [] : [];
-        tidakHadir3x = res3x.ok ? (await res3x.json()).lapakTidakHadir3x || [] : [];
-
-    } catch (e) {
-        console.error("Gagal fetch data tidak hadir:", e);
-        tidakHadir2x = [];
-        tidakHadir3x = [];
+    if (item.status === "kosong") {
+        statusClass = "status-kosong";
+        statusText = "Kosong";
+    } else if (item.status === "terisi") {
+        const bayar = item.bayar === true || item.bayar === "true";
+        statusClass = bayar ? "status-terisi" : "status-belumbayar";
+        statusText = bayar ? "Sudah Bayar Pendaftaran" : "Proses Pembayaran Pendaftaran";
     }
-}
 
-// =================== Loading Spinner ===================
-function showLoading(show) {
-    const loader = document.getElementById("loading");
-    const text = document.getElementById("loadingText");
-
-    if (show) {
-        loader.style.display = "flex";
-        let dots = 0;
-        loadingInterval = setInterval(() => {
-            dots = (dots + 1) % 4;
-            text.textContent = "Sedang memuat data" + ".".repeat(dots);
-        }, 500);
-    } else {
-        loader.style.display = "none";
-        clearInterval(loadingInterval);
-        text.textContent = "Sedang memuat data";
-    }
-}
-
-// =================== Generate Range ===================
-function generateRangeOptions() {
-    const rangeSelect = document.getElementById("rangeSelect");
-    rangeSelect.innerHTML = "";
-    rangeSelect.appendChild(new Option("Semua Nomor", "all"));
-
-    let maxNo = lapakData.length > 0 ? lapakData[lapakData.length - 1].no : 0;
-    let step = 50;
-
-    for (let start = 1; start <= maxNo; start += step) {
-        let end = Math.min(start + step - 1, maxNo);
-        rangeSelect.appendChild(new Option(`${start} - ${end}`, `${start}-${end}`));
-    }
-}
-function renderGrid() {
-    const grid = document.getElementById("lapakGrid");
-    const search = document.getElementById("searchInput").value.toLowerCase();
-    const filter = document.getElementById("filterSelect").value;
-    const range = document.getElementById("rangeSelect").value;
-
-    grid.innerHTML = "";
-
-    // Filter data
-    const filtered = lapakData.filter(({ no, nama, status, bayar }) => {
-        if (filter === "kosong" && status !== "kosong") return false;
-        if (filter === "terisi" && status !== "terisi") return false;
-        if (filter === "belumbayar" && bayar !== false) return false;
-        if (filter === "tidakhadir2" && !tidakHadir2x.some(l => l.noLapak == no)) return false;
-        if (filter === "tidakhadir3" && !tidakHadir3x.some(l => l.noLapak == no)) return false;
-        if (!no.toString().includes(search) && !nama.toLowerCase().includes(search)) return false;
-
-        if (range !== "all") {
-            const [start, end] = range.split("-").map(Number);
-            if (no < start || no > end) return false;
-        }
-        return true;
-    });
-
-    const safePageSize = pageSize > 0 ? pageSize : filtered.length || 1;
-    const totalPages = Math.ceil(filtered.length / safePageSize);
-    if (currentPage > totalPages) currentPage = totalPages || 1;
-    const startIdx = (currentPage - 1) * safePageSize;
-    const pageData = filtered.slice(startIdx, startIdx + safePageSize);
-
-    pageData.forEach(({ no, nama, status, bayar }) => {
-        const div = document.createElement("div");
-        div.classList.add("lapak", status);
-
-        if (bayar === false) div.classList.add("belumbayar");
-        if (tidakHadir3x.some(l => l.noLapak == no)) {
-            div.classList.add("tidakhadir3x");
-            div.innerHTML += `
-                <div class="status-icon" title="Tidak Hadir 3x Berturut-turut">❌</div>
-                <div class="warning-text">❌ Lapak ini sudah 3x tidak hadir berturut-turut, lapak bisa hangus!</div>
-            `;
-        } else if (tidakHadir2x.some(l => l.noLapak == no)) {
-            div.classList.add("tidakhadir2x");
-            div.innerHTML += `
-                <div class="status-icon" title="Tidak Hadir 2x Berturut-turut">⚠️</div>
-                <div class="warning-text">⚠️ Lapak ini sudah 2x tidak hadir berturut-turut, harap diperhatikan!</div>
-            `;
-        }
-
-        div.dataset.no = no;
-        div.dataset.nama = nama;
-
-        let insideText = "";
-        const match = nama.match(/\((.*?)\)/);
-        if (match) {
-            insideText = `<hr class="lapak-separator" /><div class="lapak-inside">${match[1]}</div>`;
-        }
-
-        div.innerHTML += `
-            <div class="lapak-info">
-                <div class="lapak-no">Lapak: <span class="number">${no}</span></div>
-                <hr class="lapak-separator" />
-                <div class="lapak-nama">${nama.replace(/\(.*?\)/g, '')}</div>
-                ${insideText}
-            </div>
-        `;
-
-        div.onclick = () => openDetailModal({ noLapak: no, nama, status, bayar });
-
-        if (bayar === false && document.body.classList.contains("dark")) {
-            div.style.backgroundColor = "#f1c40f";
-            div.style.color = "#000";
-            const elems = div.querySelectorAll(".lapak-no, .lapak-nama, .lapak-inside");
-            elems.forEach(el => el.style.color = "#1a1a1a");
-        }
-
-        grid.appendChild(div);
-    });
-
-    renderPagination(totalPages);
-}
-
-// =================== Render Pagination ===================
-function renderPagination(totalPages) {
-    const nav = document.getElementById("paginationNav");
-    nav.innerHTML = "";
-    if (totalPages <= 1) return;
-
-    nav.append(`Halaman ${currentPage} dari ${totalPages}`);
-
-    const prevBtn = document.createElement("button");
-    prevBtn.textContent = "⬅ Prev";
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.onclick = () => { currentPage--; renderGrid(); };
-    nav.appendChild(prevBtn);
-
-    const nextBtn = document.createElement("button");
-    nextBtn.textContent = "Next ➡";
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.onclick = () => { currentPage++; renderGrid(); };
-    nav.appendChild(nextBtn);
-}
-function openDetailModal(lapak) {
-    const modal = document.getElementById("detailModal");
-    document.getElementById("detailTitle").textContent = `Detail Lapak ${lapak.noLapak}`;
-    document.getElementById("detailBody").innerHTML = `
-        <p><b>Nomor:</b> ${lapak.noLapak}</p>
-        <p><b>Nama:</b> ${lapak.nama}</p>
-        <p><b>Status:</b> ${lapak.status}</p>
+    return `
+    <div class="card">
+        <div class="status-badge ${statusClass}">${statusText}</div>
+        <h3>Lapak ${item.no || "-"}</h3>
+        <p>👤 <span class="nama">${nama}</span></p>
+        <hr>
+        <p>🛒 <span class="barang">${barang}</span></p>
+        <button class="btn" onclick="openDetailModal('${item.no || ""}')">📄 Detail</button>
+    </div>
     `;
-    modal.dataset.lapakId = lapak.noLapak;
-    modal.dataset.lapakName = lapak.nama;
-    modal.style.display = "flex";
+}
+
+// =================== Render Tidak Hadir ===================
+function renderTidakHadirCard(item, type) {
+    const { nama, barang } = parseNamaBarang(item.nama);
+
+    // Tentukan badge berdasarkan tipe
+    let badge = "";
+    if (type === "tidakhadir2x") badge = "Tidak Hadir 2x";
+    else if (type === "tidakhadir3x") badge = "Tidak Hadir 3x";
+    else if (type === "izin") badge = "Izin";
+
+    // Tentukan tanggal yang akan ditampilkan
+    let tanggalDisplay = "-";
+    if (type === "izin") {
+        tanggalDisplay = item.tanggal1 || "-";
+    } else {
+        tanggalDisplay = `${item.tanggal1 || "-"}${item.tanggal2 ? " & " + item.tanggal2 : ""}${item.tanggal3 ? " & " + item.tanggal3 : ""}`;
+    }
+
+    return `
+    <div class="card">
+        <div class="status-badge status-belumbayar">${badge}</div>
+        <h3>Lapak ${item.noLapak || "-"}</h3>
+        <p>👤 <span class="nama">${nama}</span></p>
+        <hr>
+        <p>🛒 <span class="barang">${barang}</span></p>
+        <p>📅 ${tanggalDisplay}</p>
+    </div>
+    `;
+}
+
+
+// =================== Render Grid ===================
+async function renderGrid() {
+    grid.innerHTML = "";
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusFilter = filterSelect.value.toLowerCase();
+
+    try {
+        // ======= API tidakhadir =======
+        if (statusFilter === "2x" || statusFilter === "3x") {
+            const url = statusFilter === "2x" ? API_TIDAK_HADIR_2X : API_TIDAK_HADIR_3X;
+            showLoading(true);
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+            const json = await res.json();
+            showLoading(false);
+
+            let arr = statusFilter === "2x"
+                ? (Array.isArray(json.lapakTidakHadir2x) ? json.lapakTidakHadir2x : [])
+                : (Array.isArray(json.lapakTidakHadir3x) ? json.lapakTidakHadir3x : []);
+
+            filteredData = arr.filter(l => {
+                const nama = (l.nama || "").toLowerCase();
+                const noStr = (l.noLapak || "").toString();
+                return searchTerm.trim() !== "" ? (nama.includes(searchTerm) || noStr.includes(searchTerm)) : true;
+            });
+
+            if (!filteredData.length) {
+                grid.innerHTML = `<p style="grid-column:1/-1;text-align:center">❌ Tidak ada data</p>`;
+                paginationNav.innerHTML = "";
+                return;
+            }
+
+            filteredData.forEach((l, idx) => {
+                const temp = document.createElement("div");
+                temp.innerHTML = renderTidakHadirCard(l, statusFilter === "2x" ? "tidakhadir2x" : "tidakhadir3x");
+                const card = temp.firstElementChild;
+                card.style.animationDelay = `${idx * 0.05}s`;
+                grid.appendChild(card);
+            });
+
+            paginationNav.innerHTML = ""; // Nonaktifkan pagination untuk API tidakhadir
+            return;
+        }
+
+        // ======= API izin =======
+        if (statusFilter === "izin") {
+            showLoading(true);
+            const res = await fetch(API_IZIN);
+            if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+            const json = await res.json();
+            showLoading(false);
+
+            const arr = Array.isArray(json.izin) ? json.izin : [];
+
+            filteredData = arr.filter(l => {
+                const nama = (l.nama || "").toLowerCase();
+                const noStr = (l.nomor_lapak || "").toString();
+                return searchTerm.trim() !== "" ? (nama.includes(searchTerm) || noStr.includes(searchTerm)) : true;
+            });
+
+            if (!filteredData.length) {
+                grid.innerHTML = `<p style="grid-column:1/-1;text-align:center">❌ Tidak ada data izin</p>`;
+                paginationNav.innerHTML = "";
+                return;
+            }
+
+            filteredData.forEach((l, idx) => {
+                const temp = document.createElement("div");
+                temp.innerHTML = renderTidakHadirCard(
+                    { noLapak: l.nomor_lapak, nama: l.nama, tanggal1: l.tanggal },
+                    "izin"
+                );
+                const card = temp.firstElementChild;
+                card.style.animationDelay = `${idx * 0.05}s`;
+                grid.appendChild(card);
+            });
+
+            paginationNav.innerHTML = ""; // Nonaktifkan pagination untuk API izin
+            return;
+        }
+
+        // ======= Filter lokal (lapakData) =======
+        filteredData = lapakData.filter(l => {
+            const nama = (l.nama || "").toLowerCase();
+            const noStr = l.no ? l.no.toString() : "";
+            let match = searchTerm ? (nama.includes(searchTerm) || noStr.includes(searchTerm)) : true;
+
+            if (statusFilter && statusFilter !== "all") {
+                const bayar = l.bayar === true || l.bayar === "true";
+                match = match && (
+                    (statusFilter === "kosong" && l.status === "kosong") ||
+                    (statusFilter === "terisi-lunas" && l.status === "terisi" && bayar) ||
+                    (statusFilter === "terisi-belumbayar" && l.status === "terisi" && !bayar)
+                );
+            }
+
+            if (rangeSelect.value !== "all" && l.no) {
+                const [start, end] = rangeSelect.value.split("-").map(Number);
+                const no = parseInt(l.no);
+                if (!isNaN(no)) match = match && no >= start && no <= end;
+            }
+
+            return match;
+        });
+
+        // ======= Paging & Render =======
+        let dataToShow = [...filteredData];
+        if (pageSize !== "all") {
+            const start = (currentPage - 1) * pageSize;
+            dataToShow = dataToShow.slice(start, start + pageSize);
+        }
+
+        if (!dataToShow.length) {
+            grid.innerHTML = `<p style="grid-column:1/-1;text-align:center">❌ Tidak ada data</p>`;
+            paginationNav.innerHTML = "";
+            return;
+        }
+
+        dataToShow.forEach((l, idx) => {
+            const temp = document.createElement("div");
+            temp.innerHTML = renderLapakCard(l);
+            const card = temp.firstElementChild;
+            card.style.animationDelay = `${idx * 0.05}s`;
+            grid.appendChild(card);
+        });
+
+        renderPagination();
+    } catch (err) {
+        console.error("❌ Error renderGrid:", err);
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center">⚠️ ${err.message}</p>`;
+        paginationNav.innerHTML = "";
+        showLoading(false);
+    }
+}
+
+
+// =================== Pagination ===================
+function renderPagination() {
+    paginationNav.innerHTML = "";
+    if (pageSize === "all") return;
+    const totalPages = Math.ceil(filteredData.length / pageSize);
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = i === currentPage ? "active" : "";
+        btn.onclick = () => { currentPage = i; renderGrid(); };
+        paginationNav.appendChild(btn);
+    }
+}
+
+// =================== Modal ===================
+async function openDetailModal(noLapak) {
+    const modal = document.getElementById("detailModal");
+    const body = document.getElementById("detailBody");
+    body.innerHTML = "";
+
+    modal.classList.add("show");
+    showLoading(true); // Tampilkan loading overlay
+
+    try {
+        // Ambil data absensi
+        const resAbsensi = await fetch(`${API_URL}?action=lihatrekapperlapak&period=1_tahun&noLapak=${noLapak}`);
+        const dataAbsensi = await resAbsensi.json();
+
+        // Ambil data izin
+        const resIzin = await fetch(`${API_URL}?action=izin`);
+        const dataIzin = await resIzin.json();
+
+        showLoading(false); // Sembunyikan loading
+
+        // Validasi data absensi
+        if (!dataAbsensi.success || !Array.isArray(dataAbsensi.detail)) {
+            body.innerHTML = `<p style="color:red;">❌ ${dataAbsensi.message || "Data absensi tidak ditemukan."}</p>`;
+            return;
+        }
+
+        const detail = dataAbsensi.detail[0];
+        if (!detail || !detail.riwayat) {
+            body.innerHTML = `<p>📭 Tidak ada data absensi untuk lapak ini.</p>`;
+            return;
+        }
+
+        // Gabungkan riwayat absensi + izin
+        let riwayat = detail.riwayat;
+        const izinList = Array.isArray(dataIzin.izin)
+            ? dataIzin.izin.filter(i => i.nomor_lapak == noLapak)
+            : [];
+
+        const izinRiwayat = izinList.map(i => ({
+            tanggal: i.tanggal,
+            hadir: false,
+            izin: true
+        }));
+
+        riwayat = [...riwayat, ...izinRiwayat].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+        // Hitung total
+        const totalHadir = riwayat.filter(r => r.hadir === true).length;
+        const totalTidak = riwayat.filter(r => !r.hadir && !r.izin).length;
+        const totalIzin = riwayat.filter(r => r.izin === true).length;
+
+        // Isi modal
+        body.innerHTML = `
+            <div class="absensi-summary">
+                <span class="badge status-hadir">✅ Hadir: ${totalHadir}</span>
+                <span class="badge status-tidak">❌ Tidak Hadir: ${totalTidak}</span>
+                <span class="badge status-izin">📄 Izin: ${totalIzin}</span>
+            </div>
+
+            <h4 style="margin-top:1rem;">📅 Riwayat Absensi</h4>
+            <table class="absensi-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${riwayat.length > 0
+                ? riwayat.map(r => `
+                            <tr>
+                                <td>${r.tanggal}</td>
+                                <td class="${r.hadir ? 'status-hadir' : r.izin ? 'status-izin' : 'status-tidak'}">
+                                    ${r.hadir ? 'Hadir' : r.izin ? 'Izin' : 'Tidak Hadir'}
+                                </td>
+                            </tr>
+                          `).join("")
+                : `<tr><td colspan="2">Tidak ada data</td></tr>`
+            }
+                </tbody>
+            </table>
+        `;
+    } catch (err) {
+        console.error("Gagal memuat data modal:", err);
+        showLoading(false);
+        body.innerHTML = `<p style="color:red;">❌ Gagal memuat data. Silakan coba lagi nanti.</p>`;
+        showToast("Gagal memuat data absensi", () => openDetailModal(noLapak));
+    }
 }
 
 function closeDetailModal() {
-    document.getElementById("detailModal").style.display = "none";
+    document.getElementById("detailModal").classList.remove("show");
 }
+window.openDetailModal = openDetailModal;
+window.closeDetailModal = closeDetailModal;
 
-function closeRequestModal() {
-    document.getElementById("requestModal").style.display = "none";
-}
-
-function showToast(message, type = "success") {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.style.display = "block";
-    setTimeout(() => { toast.style.display = "none"; }, 3000);
-}
-// Debounce search input
-let searchDebounce;
-document.getElementById("searchInput").addEventListener("input", () => {
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => {
-        currentPage = 1;
-        renderGrid();
-    }, 300);
-});
-
-document.getElementById("filterSelect").addEventListener("change", (e) => {
-    currentPage = 1;
-    renderGrid();
-
-    const sel = e.target;
-    const colors = {
-        kosong: ["#2ecc71", "#000"],
-        terisi: ["#ffffff", "#000"],
-        belumbayar: ["#e74c3c", "#fff"],
-        tidakhadir2: ["#f1c40f", "#000"],
-        tidakhadir3: ["#c0392b", "#fff"]
-    };
-    const [bg, fg] = colors[sel.value] || ["", ""];
-    sel.style.backgroundColor = bg;
-    sel.style.color = fg;
-});
-
-document.getElementById("rangeSelect").addEventListener("change", () => {
+// =================== Events ===================
+searchInput.addEventListener("input", () => { currentPage = 1; renderGrid(); });
+filterSelect.addEventListener("change", () => { currentPage = 1; renderGrid(); });
+rangeSelect.addEventListener("change", () => { currentPage = 1; renderGrid(); });
+pageSizeSelect.addEventListener("change", e => {
+    pageSize = e.target.value === "all" ? "all" : parseInt(e.target.value);
     currentPage = 1;
     renderGrid();
 });
 
-document.getElementById("pageSizeSelect").addEventListener("change", (e) => {
-    pageSize = e.target.value === "all" ? lapakData.length : parseInt(e.target.value);
-    currentPage = 1;
-    renderGrid();
+// Dark Mode
+themeBtn.addEventListener("click", () => {
+    const dark = document.body.classList.toggle("dark");
+    themeBtn.textContent = dark ? "☀️ Mode Terang" : "🌙 Mode Gelap";
 });
 
-document.getElementById("btnAbsensi").addEventListener("click", () => {
-    const modal = document.getElementById("detailModal");
-    openAbsensiModal(modal.dataset.lapakId, modal.dataset.lapakName);
-});
-
-scrollBtn.addEventListener("click", () => {
-    if (window.scrollY + window.innerHeight >= document.body.scrollHeight - 50) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
+// FAB Scroll
+fab.addEventListener("click", () => {
+    if (scrollDown) {
         window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        fab.textContent = "⬆️";
+    } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        fab.textContent = "⬇️";
+    }
+    scrollDown = !scrollDown;
+});
+
+// Ripple effect
+function createRipple(e) {
+    Array.from(e.currentTarget.getElementsByClassName("ripple-effect")).forEach(r => r.remove());
+    const circle = document.createElement("span");
+    const diameter = Math.max(e.currentTarget.clientWidth, e.currentTarget.clientHeight);
+    const radius = diameter / 2;
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${e.clientX - e.currentTarget.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${e.clientY - e.currentTarget.getBoundingClientRect().top - radius}px`;
+    circle.classList.add("ripple-effect");
+    e.currentTarget.appendChild(circle);
+}
+document.querySelectorAll('.btn, .card').forEach(el => el.addEventListener("click", createRipple));
+
+// =================== Range Options ===================
+function generateRangeOptions() {
+    rangeSelect.innerHTML = `<option value="all"># Semua Nomor</option>`;
+    const nomorLapak = lapakData
+        .map(l => parseInt(l.no))
+        .filter(n => !isNaN(n))
+        .sort((a, b) => a - b);
+
+    if (!nomorLapak.length) return;
+    const maxLapak = Math.max(...nomorLapak);
+    const step = 10;
+    for (let start = 1; start <= maxLapak; start += step) {
+        const end = Math.min(start + step - 1, maxLapak);
+        const opt = document.createElement("option");
+        opt.value = `${start}-${end}`;
+        opt.textContent = `# Lapak ${start}–${end}`;
+        rangeSelect.appendChild(opt);
+    }
+}
+// =================== Pull to Refresh ===================
+let startY = 0;
+let isRefreshing = false;
+
+document.addEventListener("touchstart", e => {
+    if (window.scrollY === 0) { // hanya saat di atas halaman
+        startY = e.touches[0].pageY;
+    } else {
+        startY = 0;
     }
 });
 
-window.addEventListener("scroll", () => {
-    scrollBtn.classList.toggle("show", window.scrollY > 200);
-    const nearBottom = window.scrollY + window.innerHeight >= document.body.scrollHeight - 50;
-    iconDown.style.display = nearBottom ? "none" : "block";
-    iconUp.style.display = nearBottom ? "block" : "none";
+document.addEventListener("touchmove", e => {
+    if (startY > 0) {
+        const currentY = e.touches[0].pageY;
+        const diff = currentY - startY;
+
+        if (diff > 80 && !isRefreshing) { // threshold tarik kebawah
+            isRefreshing = true;
+            clearCache(); // hapus cache lama
+            fetchLapak(true).finally(() => {
+                setTimeout(() => { isRefreshing = false; }, 1000);
+            });
+
+            // kasih feedback visual
+            showToast("🔄 Memuat ulang data...");
+        }
+    }
 });
-
-if (localStorage.getItem("theme") === "dark") {
-    document.body.classList.add("dark");
-    toggleTheme.textContent = "☀️";
-    toggleTheme.setAttribute("data-tooltip", "Mode Terang");
-} else {
-    toggleTheme.textContent = "🌙";
-    toggleTheme.setAttribute("data-tooltip", "Mode Gelap");
-}
-
-toggleTheme.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    const isDark = document.body.classList.contains("dark");
-    toggleTheme.textContent = isDark ? "☀️" : "🌙";
-    toggleTheme.setAttribute("data-tooltip", isDark ? "Mode Terang" : "Mode Gelap");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-});
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
 // =================== Init ===================
-showLoading(true);
-loadData();
+fetchLapak();
