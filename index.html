@@ -55,7 +55,7 @@
                 </select>
             </div>
         </div>
-
+        <button class="btn-denah" onclick="openDenah()">📍 Lihat Denah</button>
         <div id="lapakGrid" class="grid-container"></div>
     </div>
     <!-- Loading -->
@@ -75,7 +75,14 @@
             <button class="btn" onclick="closeDetailModal()">Tutup</button>
         </div>
     </div>
-
+    <!-- Modal Denah -->
+    <div id="denahModal" class="modal">
+        <div class="modal-content denah-content">
+            <span class="close" onclick="closeDenah()">&times;</span>
+            <h2>📍 Denah Lapak Pasar</h2>
+            <iframe src="https://pasarrakyatbak.github.io/denah/" class="denah-frame"></iframe>
+        </div>
+    </div>
     <!-- Toast -->
     <div id="toast"></div>
 
