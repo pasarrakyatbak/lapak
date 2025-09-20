@@ -967,27 +967,3 @@ body.dark #lapakGrid .card {
         margin-top: 1rem;
     }
 }
-
-/* Tablet / Android besar ≤ 768px */
-@media screen and (max-width: 768px) {
-    #lapakGrid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        /* 2–3 kolom fleksibel */
-        gap: 1rem;
-        padding: 1rem;
-    }
-}
-
-/* HP Android kecil ≤ 480px */
-@media screen and (max-width: 480px) {
-    #lapakGrid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.6rem;
-        padding: 0.6rem;
-    }
-
-    #lapakGrid .card {
-        aspect-ratio: 1 / 1;
-        padding: 0.6rem;
-    }
-}
