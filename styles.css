@@ -677,6 +677,19 @@ body.dark .spinner {
     border-top-color: #6dd5ed;
 }
 
+.btn-denah {
+    display: inline-block;
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 1001;
+}
+
 /* 🔹 Grid Lapak */
 #lapakGrid {
     display: grid;
