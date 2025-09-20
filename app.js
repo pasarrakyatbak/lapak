@@ -524,6 +524,16 @@ document.addEventListener("touchmove", e => {
         }
     }
 });
+// === Tombol Lihat Denah ===
+document.addEventListener("DOMContentLoaded", function () {
+    const denahBtn = document.querySelector(".btn-denah");
+    if (denahBtn) {
+        denahBtn.addEventListener("click", function (e) {
+            e.preventDefault(); // cegah bug kalau ada form
+            window.open("https://pasarrakyatbak.github.io/denah/", "_blank");
+        });
+    }
+});
 
 // =================== Init ===================
 fetchLapak();
