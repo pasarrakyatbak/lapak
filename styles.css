@@ -307,7 +307,12 @@ body.dark .search-box input:focus {
 }
 
 .card .nama {
-    font-size: 1.6rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+    font-size: 1.1rem;
     font-weight: 800;
     color: #1e40af;
     padding: 5px 12px;
@@ -318,7 +323,7 @@ body.dark .search-box input:focus {
 }
 
 .card .barang {
-    font-size: 1.3rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #b45309;
     padding: 5px 10px;
@@ -391,10 +396,9 @@ body.dark .card .barang {
 .fab {
     position: relative;
     overflow: hidden;
-    /* penting biar ripple nggak keluar dari tombol */
-    border-radius: 14px;
-    padding: 0.55rem 1.2rem;
-    font-size: 0.95rem;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
     font-weight: 600;
     border: none;
     cursor: pointer;
@@ -705,8 +709,9 @@ body.dark .spinner {
 /* 🔹 Card Lapak */
 #lapakGrid .card {
     background: #fff;
-    border-radius: 1rem;
-    padding: 1rem;
+    padding: 0.8rem;
+    border-radius: 0.8rem;
+    min-height: 160px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
