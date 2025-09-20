@@ -4,116 +4,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Monitoring Pelapak</title>
+    <title>Dashboard Lapak</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <!-- Overlay Loading Absensi -->
-    <div id="absensiLoading" class="loading-overlay" role="alert" aria-live="polite" aria-hidden="true">
-        <div class="loading-box">
-            <div class="spinner" aria-hidden="true"></div>
-            <p class="loading-text" id="absensiLoadingText">Sedang menyimpan data...</p>
+    <div class="top-container">
+        <header class="header-center">
+            <img src="images/logo.png" alt="Logo" class="header-logo">
+            <h1>Dashboard Monitoring Lapak Pasar Rakyat Bangetayu Kulon</h1>
+            <p class="header-desc">Pantau semua status lapak secara real-time dan mudah</p>
+            <button id="toggleTheme" class="theme-btn">🌙 Mode Gelap</button>
+        </header>
+
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Cari Nama / Nomor Lapak...">
+            </div>
+
+            <div class="select-box">
+                <select id="filterSelect">
+                    <option value="all">Semua Status</option>
+                    <option value="terisi-lunas">Terisi</option>
+                    <option value="terisi-belumbayar">Proses Pembayaran</option>
+                    <option value="kosong">Kosong</option>
+                    <option value="2x">Tidak Hadir 2x</option>
+                    <option value="3x">Tidak Hadir 3x</option>
+                    <option value="izin">Izin</option>
+                </select>
+            </div>
+
+            <div class="select-box">
+                <select id="rangeSelect">
+                    <option value="all"># Semua Nomor</option>
+                </select>
+            </div>
+
+            <div class="select-box">
+                <select id="pageSizeSelect">
+                    <option value="all">Tampilkan Semua</option>
+                    <option value="10">10</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="150">150</option>
+                    <option value="200">200</option>
+                    <option value="250">250</option>
+                    <option value="300">300</option>
+                </select>
+            </div>
         </div>
+
+        <div id="lapakGrid" class="grid-container"></div>
     </div>
-    <!-- Floating Button -->
-    <button id="scrollToggle" class="fab">
-        <!-- Default icon: panah bawah -->
-        <svg id="iconDown" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
-            <path d="M7 10l5 5 5-5z" />
-        </svg>
-        <svg id="iconUp" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24"
-            style="display:none">
-            <path d="M7 14l5-5 5 5z" />
-        </svg>
-    </button>
+    <!-- Loading -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>⏳ Sedang Memuat Data<span id="dots"></span></p>
+    </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-container">
-            <img src="images/logo.png" alt="Logo resmi Pasar Rakyat Bangetayu Kulon" class="logo">
-            <h1>📊 Monitoring Pelapak</h1>
-            <p>Digitalisasi pasar: lapak cepat dicari, absensi rapi, pergantian transparan.</p>
-        </div>
-        <button id="toggleTheme" class="theme-btn">🌙 Mode Gelap</button>
-    </header>
-
-    <!-- Main -->
-    <main>
-        <!-- Loading Spinner -->
-        <div id="loading" class="loading-overlay" role="alert" aria-live="polite" aria-hidden="true">
-            <div class="loading-box">
-                <div class="spinner" aria-hidden="true"></div>
-                <p class="loading-text" id="loadingText">Sedang memuat data...</p>
-            </div>
-        </div>
-
-        <!-- Toolbar -->
-        <div class="toolbar card">
-            <label for="searchInput" class="sr-only">Cari pelapak</label>
-            <input type="text" id="searchInput" name="search" class="input"
-                placeholder="🔎 Cari nomor atau nama pelapak..." autocomplete="off">
-
-            <label for="filterSelect" class="sr-only">Filter lapak</label>
-            <select id="filterSelect" name="filter" class="input">
-                <option value="all">📋 Semua Lapak</option>
-                <option value="kosong">🟩 Lapak Kosong</option>
-                <option value="terisi">🏠 Lapak Terisi</option>
-                <option value="belumbayar">💳 Proses Pembayaran Pendaftaran</option>
-            </select>
-            <label for="rangeSelect" class="sr-only">Nomor lapak</label>
-            <select id="rangeSelect" name="range" class="input">
-                <option value="all"># Pilih Nomor Lapak</option>
-            </select>
-
-            <label for="pageSizeSelect" class="sr-only">Jumlah per halaman</label>
-            <select id="pageSizeSelect" name="pageSize" class="input">
-                <option value="10">10 / halaman</option>
-                <option value="20">20 / halaman</option>
-                <option value="50">50 / halaman</option>
-                <option value="all" selected>📄 Tampilkan Semua</option>
-            </select>
-        </div>
-
-        <!-- Grid Lapak -->
-        <section>
-            <div id="lapakGrid" class="grid" aria-live="polite">
-                <!-- kotak lapak akan di-render via app.js -->
-            </div>
-            <nav id="paginationNav" class="pagination" aria-label="Navigasi halaman"></nav>
-        </section>
-    </main>
+    <!-- Pagination -->
+    <nav id="paginationNav" class="pagination"></nav>
 
     <!-- Modal Detail -->
-    <div id="detailModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle"
-        aria-hidden="true">
-        <div class="modal-content card">
-            <button class="close-btn" aria-label="Tutup detail" onclick="closeDetailModal()">&times;</button>
-            <h2 id="detailTitle">Detail Lapak</h2>
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <h2 id="detailTitle"></h2>
             <div id="detailBody"></div>
-
-            <!-- Keterangan Absensi -->
-            <p class="note-text" style="color:#ff9800; font-size:0.9rem; margin-bottom:0.5rem;">
-                ⚠️ Absensi dan Request hanya bisa dilakukan oleh panitia untuk menghindari kecurangan.
-            </p>
-
-            <!-- Penjelasan Rekap Absensi -->
-            <p class="note-text" style="color:#4caf50; font-size:0.9rem; margin-bottom:0.5rem;">
-                📊 Pelapak dapat melihat <strong>Rekap Absensi</strong> untuk memastikan data kehadiran akurat.
-                Jika terdapat kesalahan, silakan hubungi panitia dengan menyertakan bukti kehadiran.
-            </p>
-
-            <div class="form-actions">
-                <button id="btnRekap" class="btn btn-rekap">📊 Rekap</button>
-            </div>
+            <button class="btn" onclick="closeDetailModal()">Tutup</button>
         </div>
     </div>
-    <!-- Toast Notification -->
-    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
-    <!-- Script -->
+    <!-- Toast -->
+    <div id="toast"></div>
+
+    <!-- Floating Button -->
+    <button id="scrollToggle" class="fab">⬇️</button>
+
     <script src="app.js"></script>
-    <script src="absensi.js"></script>
 </body>
 
 </html>
