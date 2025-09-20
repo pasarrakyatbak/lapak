@@ -677,17 +677,40 @@ body.dark .spinner {
     border-top-color: #6dd5ed;
 }
 
+/* FIX Tombol Lihat Denah di HP */
 .btn-denah {
     display: inline-block;
-    background: linear-gradient(135deg, #ff9800, #ff5722);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 25px;
+    background: linear-gradient(135deg, #ff9800, #f44336);
+    color: #fff !important;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 16px;
     font-weight: 600;
-    text-decoration: none;
+    text-align: center;
+    text-decoration: none !important;
     cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, background 0.3s;
     position: relative;
-    z-index: 1001;
+    z-index: 3000;
+    /* pastikan di atas elemen lain */
+}
+
+.btn-denah:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #f57c00, #d32f2f);
+}
+
+@media screen and (max-width: 480px) {
+    .btn-denah {
+        width: 100%;
+        /* biar full di layar HP */
+        max-width: 280px;
+        /* tetap ada batas biar gak kepanjangan */
+        margin: 12px auto;
+        /* center di HP */
+        display: block;
+    }
 }
 
 /* 🔹 Grid Lapak */
