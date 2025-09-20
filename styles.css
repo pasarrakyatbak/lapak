@@ -967,3 +967,30 @@ body.dark #lapakGrid .card {
     }
 }
 
+.grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+    /* default HP kecil = 2 kolom */
+}
+
+@media (min-width: 480px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+        /* HP lebar = 3 kolom */
+    }
+}
+
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(4, 1fr);
+        /* Tablet = 4 kolom */
+    }
+}
+
+@media (min-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(5, 1fr);
+        /* Desktop = 5 kolom */
+    }
+}
