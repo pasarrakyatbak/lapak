@@ -289,6 +289,9 @@ body.dark .search-box input:focus {
 
 
 .card {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 3 / 2;
     border-radius: 1.5rem;
     padding: 1.5rem;
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(245, 245, 245, 0.3));
@@ -331,6 +334,7 @@ body.dark .search-box input:focus {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    object-fit: cover;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -677,51 +681,67 @@ body.dark .spinner {
 /* 🔹 Grid Lapak */
 #lapakGrid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    /* default: HP kecil = 2 kolom */
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.8rem;
     padding: 1rem;
     transition: all 0.3s ease;
-}
-
-/* Breakpoints biar menyesuaikan layar */
-@media (min-width: 480px) {
-    #lapakGrid {
-        grid-template-columns: repeat(3, 1fr);
-        /* HP lebar = 3 kolom */
-    }
-}
-
-@media (min-width: 768px) {
-    #lapakGrid {
-        grid-template-columns: repeat(4, 1fr);
-        /* Tablet = 4 kolom */
-    }
-}
-
-@media (min-width: 1024px) {
-    #lapakGrid {
-        grid-template-columns: repeat(5, 1fr);
-        /* Desktop = 5 kolom */
-    }
 }
 
 /* 🔹 Card Lapak */
 #lapakGrid .card {
     background: #fff;
-    padding: 0.8rem;
     border-radius: 0.8rem;
-    min-height: 160px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
+
+    /* Biar lebih kotak */
+    aspect-ratio: 1 / 1.1;
+    min-height: auto;
+    padding: 0.7rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     animation: fadeInUp 0.4s ease both;
 }
 
 #lapakGrid .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* 🔹 Konten dalam card */
+#lapakGrid .card .nama {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.3rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#lapakGrid .card .barang {
+    font-size: 0.85rem;
+    color: #555;
+    flex-grow: 1;
+    /* biar isi tetap rapat */
+}
+
+#lapakGrid .card .btn {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    border-radius: 0.5rem;
+}
+
+/* 🔹 Dark Mode Support */
+body.dark #lapakGrid .card {
+    background: #2b2b2b;
+    color: #f1f1f1;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
 }
 
 /* 🔹 Animasi grid */
@@ -734,87 +754,6 @@ body.dark .spinner {
     to {
         opacity: 1;
         transform: translateY(0);
-    }
-}
-
-/* 🔹 Dark Mode Support */
-body.dark #lapakGrid .card {
-    background: #2b2b2b;
-    color: #f1f1f1;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
-}
-
-/* 🔹 Animasi tambahan */
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-/* Animasi dots */
-#dots::after {
-    content: "";
-    animation: dots 1.5s steps(4, end) infinite;
-}
-
-@keyframes dots {
-
-    0%,
-    20% {
-        content: "";
-    }
-
-    40% {
-        content: ".";
-    }
-
-    60% {
-        content: "..";
-    }
-
-    80%,
-    100% {
-        content: "...";
-    }
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-80px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes fadeUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes zoomIn {
-    from {
-        transform: scale(.8);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
     }
 }
 
@@ -985,5 +924,12 @@ body.dark #lapakGrid .card {
         padding: 0.6rem 0;
         font-size: 0.9rem;
         margin-top: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .card {
+        aspect-ratio: 4 / 3;
+        max-width: 100%;
     }
 }
