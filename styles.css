@@ -287,13 +287,6 @@ body.dark .search-box input:focus {
     border: 1px solid #38bdf8;
 }
 
-/* Grid */
-#lapakGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem;
-}
 
 .card {
     border-radius: 1.5rem;
@@ -680,10 +673,33 @@ body.dark .spinner {
 /* 🔹 Grid Lapak */
 #lapakGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    /* default: HP kecil = 2 kolom */
     gap: 1rem;
     padding: 1rem;
     transition: all 0.3s ease;
+}
+
+/* Breakpoints biar menyesuaikan layar */
+@media (min-width: 480px) {
+    #lapakGrid {
+        grid-template-columns: repeat(3, 1fr);
+        /* HP lebar = 3 kolom */
+    }
+}
+
+@media (min-width: 768px) {
+    #lapakGrid {
+        grid-template-columns: repeat(4, 1fr);
+        /* Tablet = 4 kolom */
+    }
+}
+
+@media (min-width: 1024px) {
+    #lapakGrid {
+        grid-template-columns: repeat(5, 1fr);
+        /* Desktop = 5 kolom */
+    }
 }
 
 /* 🔹 Card Lapak */
@@ -723,6 +739,7 @@ body.dark #lapakGrid .card {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
 }
 
+/* 🔹 Animasi tambahan */
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -760,7 +777,6 @@ body.dark #lapakGrid .card {
     }
 }
 
-/* Animations */
 @keyframes slideDown {
     from {
         transform: translateY(-80px);
@@ -964,33 +980,5 @@ body.dark #lapakGrid .card {
         padding: 0.6rem 0;
         font-size: 0.9rem;
         margin-top: 1rem;
-    }
-}
-
-.grid {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: repeat(2, 1fr);
-    /* default HP kecil = 2 kolom */
-}
-
-@media (min-width: 480px) {
-    .grid {
-        grid-template-columns: repeat(3, 1fr);
-        /* HP lebar = 3 kolom */
-    }
-}
-
-@media (min-width: 768px) {
-    .grid {
-        grid-template-columns: repeat(4, 1fr);
-        /* Tablet = 4 kolom */
-    }
-}
-
-@media (min-width: 1024px) {
-    .grid {
-        grid-template-columns: repeat(5, 1fr);
-        /* Desktop = 5 kolom */
     }
 }
