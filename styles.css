@@ -356,7 +356,7 @@ body.dark .search-box input:focus {
 
 /* 🌐 Light Mode */
 .status-kosong {
-    background: linear-gradient(135deg, #ff7b7b, #f44336);
+   background: linear-gradient(135deg, #4caf50, #087f23);
 }
 
 .status-terisi {
