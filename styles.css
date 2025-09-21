@@ -692,8 +692,8 @@ body.dark .spinner {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s, background 0.3s;
     position: relative;
-    z-index: 3000;
-    /* pastikan di atas elemen lain */
+    z-index: 5;
+    margin-top: 10px;
 }
 
 .btn-denah:hover {
