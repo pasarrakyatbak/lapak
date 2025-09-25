@@ -193,7 +193,12 @@ async function renderGrid() {
     grid.innerHTML = "";
     const searchTerm = searchInput.value.toLowerCase();
     const statusFilter = filterSelect.value.toLowerCase();
-
+  // Jika Waiting List dipilih, hentikan render
+    if (statusFilter === "waitinglist") {
+        grid.innerHTML = `<p style="grid-column:1/-1;text-align:center">🔗 Mengarah ke Waiting List...</p>`;
+        paginationNav.innerHTML = "";
+        return;
+    }
     try {
         // ======= API tidakhadir =======
         if (statusFilter === "2x" || statusFilter === "3x") {
@@ -533,6 +538,19 @@ document.addEventListener("DOMContentLoaded", function () {
             window.open("https://pasarrakyatbak.github.io/denah/", "_blank");
         });
     }
+});
+filterSelect.addEventListener("change", () => {
+    const value = filterSelect.value.toLowerCase();
+    
+    if (value === "waitinglist") {
+        // Redirect ke halaman Waiting List
+        window.open("https://pasarrakyatbak.github.io/WaitingListforPelapak/", "_blank");
+        filterSelect.value = "all"; // reset ke Semua Status agar tidak stuck
+        return;
+    }
+
+    currentPage = 1;
+    renderGrid();
 });
 
 // =================== Init ===================
