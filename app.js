@@ -257,7 +257,7 @@ async function renderGrid() {
                 temp.innerHTML = `
         <div class="card">
             <div class="status-badge status-belumbayar">Waiting List</div>
-            <h3>${l.no || "-"}</h3>
+            <h3>Antrian ${l.no || "-"}</h3>
             <p>👤 <span class="nama">${l.nama}</span></p>
             <hr>
             <p>🛒 <span class="barang">${l.jualan || "-"}</span></p>
@@ -267,6 +267,7 @@ async function renderGrid() {
                 card.style.animationDelay = `${idx * 0.05}s`;
                 grid.appendChild(card);
             });
+
 
             paginationNav.innerHTML = "";
         } catch (err) {
