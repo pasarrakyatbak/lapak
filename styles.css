@@ -662,6 +662,29 @@ body.dark #loading {
     pointer-events: all;
 }
 
+.placeholder-card {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 2rem;
+    background: rgba(200, 200, 200, 0.1);
+    border-radius: 12px;
+    color: #666;
+    font-size: 1.2rem;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Spinner */
 .spinner {
     width: 50px;
@@ -691,10 +714,15 @@ body.dark .spinner {
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s, background 0.3s;
-    position: relative;
-    z-index: 5;
-    margin-top: 10px;
+    position: static;
+    /* ubah dari relative/fixed */
+    z-index: auto;
+    /* biar gak ngambang */
+    margin: 1rem auto;
+    /* beri jarak dari atas/bawah */
+    text-align: center;
 }
+
 
 .btn-denah:hover {
     transform: scale(1.05);
@@ -704,12 +732,10 @@ body.dark .spinner {
 @media screen and (max-width: 480px) {
     .btn-denah {
         width: 100%;
-        /* biar full di layar HP */
         max-width: 280px;
-        /* tetap ada batas biar gak kepanjangan */
-        margin: 12px auto;
-        /* center di HP */
         display: block;
+        margin: 1rem auto;
+        /* center di HP */
     }
 }
 
