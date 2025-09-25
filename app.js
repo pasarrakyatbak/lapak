@@ -255,14 +255,14 @@ async function renderGrid() {
             filteredData.forEach((l, idx) => {
                 const temp = document.createElement("div");
                 temp.innerHTML = `
-                    <div class="card">
-                        <div class="status-badge status-belumbayar">Waiting List</div>
-                        <h3>Lapak ${l.no || "-"}</h3>
-                        <p>👤 <span class="nama">${l.nama}</span></p>
-                        <hr>
-                        <p>🛒 <span class="barang">${l.jualan || "-"}</span></p>
-                    </div>
-                `;
+        <div class="card">
+            <div class="status-badge status-belumbayar">Waiting List</div>
+            <h3>${l.no || "-"}</h3>
+            <p>👤 <span class="nama">${l.nama}</span></p>
+            <hr>
+            <p>🛒 <span class="barang">${l.jualan || "-"}</span></p>
+        </div>
+    `;
                 const card = temp.firstElementChild;
                 card.style.animationDelay = `${idx * 0.05}s`;
                 grid.appendChild(card);
