@@ -423,13 +423,9 @@ async function openDetailModal(noLapak) {
     showLoading(true); // Tampilkan loading overlay
 
     try {
-        // Ambil data absensi
+        // Ambil data absensi + izin sudah include
         const resAbsensi = await fetch(`${API_URL}?action=lihatrekapperlapak&period=1_tahun&noLapak=${noLapak}`);
         const dataAbsensi = await resAbsensi.json();
-
-        // Ambil data izin
-        const resIzin = await fetch(`${API_URL}?action=izin`);
-        const dataIzin = await resIzin.json();
 
         showLoading(false); // Sembunyikan loading
 
@@ -445,31 +441,22 @@ async function openDetailModal(noLapak) {
             return;
         }
 
-        // Gabungkan riwayat absensi + izin
-        let riwayat = detail.riwayat;
-        const izinList = Array.isArray(dataIzin.izin)
-            ? dataIzin.izin.filter(i => i.nomor_lapak == noLapak)
-            : [];
+        // Ambil riwayat langsung
+        let riwayat = detail.riwayat.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
 
-        const izinRiwayat = izinList.map(i => ({
-            tanggal: i.tanggal,
-            hadir: false,
-            izin: true
-        }));
-
-        riwayat = [...riwayat, ...izinRiwayat].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-
-        // Hitung total
-        const totalHadir = riwayat.filter(r => r.hadir === true).length;
-        const totalTidak = riwayat.filter(r => !r.hadir && !r.izin).length;
-        const totalIzin = riwayat.filter(r => r.izin === true).length;
+        // Hitung total berdasarkan status
+        const totalHadir = riwayat.filter(r => r.status === "hadir").length;
+        const totalIzin = riwayat.filter(r => r.status === "izin").length;
+        const totalTidak = riwayat.filter(r => r.status === "tanpa_keterangan" || r.status === "tidak_hadir").length;
+        const totalBelumMulai = riwayat.filter(r => r.status === "belum_mulai").length;
 
         // Isi modal
         body.innerHTML = `
             <div class="absensi-summary">
                 <span class="badge status-hadir">✅ Hadir: ${totalHadir}</span>
-                <span class="badge status-tidak">❌ Tidak Hadir: ${totalTidak}</span>
                 <span class="badge status-izin">📄 Izin: ${totalIzin}</span>
+                <span class="badge status-tidak">❌ Tidak Hadir: ${totalTidak}</span>
+                <span class="badge status-belum">⏳ Belum Mulai: ${totalBelumMulai}</span>
             </div>
 
             <h4 style="margin-top:1rem;">📅 Riwayat Absensi</h4>
@@ -485,8 +472,16 @@ async function openDetailModal(noLapak) {
                 ? riwayat.map(r => `
                             <tr>
                                 <td>${r.tanggal}</td>
-                                <td class="${r.hadir ? 'status-hadir' : r.izin ? 'status-izin' : 'status-tidak'}">
-                                    ${r.hadir ? 'Hadir' : r.izin ? 'Izin' : 'Tidak Hadir'}
+                                <td class="${r.status === "hadir" ? "status-hadir"
+                        : r.status === "izin" ? "status-izin"
+                            : r.status === "belum_mulai" ? "status-belum"
+                                : "status-tidak"
+                    }">
+                                    ${r.status === "hadir" ? "Hadir"
+                        : r.status === "izin" ? "Izin"
+                            : r.status === "belum_mulai" ? "Belum Mulai"
+                                : "Tidak Hadir"
+                    }
                                 </td>
                             </tr>
                           `).join("")
@@ -502,6 +497,7 @@ async function openDetailModal(noLapak) {
         showToast("Gagal memuat data absensi", () => openDetailModal(noLapak));
     }
 }
+
 
 function closeDetailModal() {
     document.getElementById("detailModal").classList.remove("show");
