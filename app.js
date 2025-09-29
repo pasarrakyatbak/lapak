@@ -417,40 +417,55 @@ function renderPagination() {
 async function openDetailModal(noLapak) {
     const modal = document.getElementById("detailModal");
     const body = document.getElementById("detailBody");
-    body.innerHTML = "";
+    const title = document.getElementById("detailTitle");
+
+    // Cari data lapak di array global
+    const lapak = lapakData.find(l => l.no === noLapak);
+
+    // Set judul modal: Lapak X - Nama Pedagang
+    title.textContent = lapak ? `Lapak ${lapak.no} - ${lapak.nama}` : `Lapak ${noLapak}`;
+
+    // isi body sementara → spinner + teks
+    body.innerHTML = `
+        <div style="text-align:center; padding:1rem;">
+            <div class="spinner" style="
+                width:40px;
+                height:40px;
+                border:4px solid #ccc;
+                border-top:4px solid #2193b0;
+                border-radius:50%;
+                margin:0 auto 1rem;
+                animation: spin 1s linear infinite;
+            "></div>
+            <p>Sedang memuat data...</p>
+        </div>
+    `;
 
     modal.classList.add("show");
-    showLoading(true); // Tampilkan loading overlay
 
     try {
-        // Ambil data absensi + izin sudah include
         const resAbsensi = await fetch(`${API_URL}?action=lihatrekapperlapak&period=1_tahun&noLapak=${noLapak}`);
         const dataAbsensi = await resAbsensi.json();
 
-        showLoading(false); // Sembunyikan loading
-
-        // Validasi data absensi
+        // validasi respon
         if (!dataAbsensi.success || !Array.isArray(dataAbsensi.detail)) {
             body.innerHTML = `<p style="color:red;">❌ ${dataAbsensi.message || "Data absensi tidak ditemukan."}</p>`;
             return;
         }
 
         const detail = dataAbsensi.detail[0];
-        if (!detail || !detail.riwayat) {
-            body.innerHTML = `<p>📭 Tidak ada data absensi untuk lapak ini.</p>`;
+        if (!detail || !detail.riwayat || detail.riwayat.length === 0) {
+            body.innerHTML = `<p>📭 Belum ada riwayat absensi untuk lapak ini.</p>`;
             return;
         }
 
-        // Ambil riwayat langsung
         let riwayat = detail.riwayat.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
 
-        // Hitung total berdasarkan status
         const totalHadir = riwayat.filter(r => r.status === "hadir").length;
         const totalIzin = riwayat.filter(r => r.status === "izin").length;
         const totalTidak = riwayat.filter(r => r.status === "tanpa_keterangan" || r.status === "tidak_hadir").length;
         const totalBelumMulai = riwayat.filter(r => r.status === "belum_mulai").length;
 
-        // Isi modal
         body.innerHTML = `
             <div class="absensi-summary">
                 <span class="badge status-hadir">✅ Hadir: ${totalHadir}</span>
@@ -468,31 +483,71 @@ async function openDetailModal(noLapak) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${riwayat.length > 0
-                ? riwayat.map(r => `
-                            <tr>
-                                <td>${r.tanggal}</td>
-                                <td class="${r.status === "hadir" ? "status-hadir"
-                        : r.status === "izin" ? "status-izin"
-                            : r.status === "belum_mulai" ? "status-belum"
-                                : "status-tidak"
-                    }">
-                                    ${r.status === "hadir" ? "Hadir"
-                        : r.status === "izin" ? "Izin"
-                            : r.status === "belum_mulai" ? "Belum Mulai"
-                                : "Tidak Hadir"
-                    }
-                                </td>
-                            </tr>
-                          `).join("")
-                : `<tr><td colspan="2">Tidak ada data</td></tr>`
-            }
+                    ${riwayat.map(r => `
+                        <tr>
+                            <td>${r.tanggal}</td>
+                            <td class="${r.status === "hadir" ? "status-hadir"
+                : r.status === "izin" ? "status-izin"
+                    : r.status === "belum_mulai" ? "status-belum"
+                        : "status-tidak"}">
+                                ${r.status === "hadir" ? "Hadir"
+                : r.status === "izin" ? "Izin"
+                    : r.status === "belum_mulai" ? "Belum Mulai"
+                        : "Tidak Hadir"}
+                            </td>
+                        </tr>`).join("")}
                 </tbody>
             </table>
+               <!-- Aturan tambahan -->
+    <div class="rules-text" style="margin-top:1.5rem; text-align:left;">
+        <h4>📌 Ketentuan Lapak</h4>
+       <ul>
+                    <li>
+                        <strong>Absen 3x berturut-turut</strong> + <strong>tidak bayar retribusi minimal 1x</strong>
+                        → <em>Lapak dianggap hangus</em>.
+                        📌 <u>Alasan:</u> untuk memberi kesempatan kepada pelapak lain yang lebih aktif.
+                        ⚡ <u>Konsekuensi:</u> lapak langsung <em>dialihkan ke calon pelapak dalam waiting list</em>.
+                    </li>
+                    <li>
+                        <strong>Izin 3x berturut-turut</strong> + <strong>tidak bayar retribusi minimal 1x</strong>  
+                        → <em>Lapak dianggap hangus</em>.  
+                        📌 <u>Alasan:</u> supaya lapak tidak kosong terus-menerus dan bisa dipakai oleh pelapak lain yang sudah antre di <em>waiting list</em>.  
+                        ⚡ <u>Konsekuensi:</u> hak atas lapak dicabut dan langsung <em>dialihkan ke calon pelapak waiting list</em>.
+                    </li>
+                    <li>
+                        <strong>Lapak dipakai orang lain</strong> tanpa izin resmi panitia
+                        → tetap <em>dianggap tidak hadir</em> bagi pemilik asli.
+                        📌 <u>Alasan:</u> untuk menjaga ketertiban dan kejelasan kepemilikan lapak.
+                        ⚡ <u>Konsekuensi:</u> pemilik lapak bisa kehilangan hak atas lapak jika pelanggaran berulang.
+                    </li>
+
+                    <li>
+                        <strong>Tidak ikut Jumpa Pelapak sebanyak 3x</strong>
+                        → mendapat <em>sanksi langsung dari ketua panitia</em>.
+                        📌 <u>Alasan:</u> Jumpa Pelapak adalah forum komunikasi penting.
+                        ⚡ <u>Konsekuensi:</u> sanksi bisa berupa teguran lisan maupun tertulis, atau evaluasi
+                        keanggotaan pelapak.
+                    </li>
+
+                    <li>
+                        <strong>Lapak hangus</strong> → untuk daftar ulang dikenakan biaya
+                        <strong>Rp30.000 per lapak (180 cm)</strong>.
+                        ⚠️ <em>Tidak otomatis kembali ke tempat lama</em>.
+                        📌 <u>Alasan:</u> untuk mengatur ulang posisi, menjaga keadilan, dan memberi kesempatan pelapak baru.  
+                        ⚡ <u>Konsekuensi:</u> 
+                              - Lokasi lama bisa ditempati orang lain.  
+                              - Jika ingin jualan lagi, pelapak wajib masuk <em>waiting list</em> dan menunggu ada lapak kosong/hangus.
+                    <li>
+                        <strong>Dilarang parkir di area lapak kosong</strong>.
+                        📌 <u>Alasan:</u> area kosong disiapkan untuk calon pelapak baru atau keperluan panitia.
+                        ⚡ <u>Konsekuensi:</u> kendaraan wajib dipindahkan ke <em>parkir resmi panitia</em>, jika
+                        melanggar bisa kena teguran.
+                    </li>
+                </ul>
+    </div>
         `;
     } catch (err) {
         console.error("Gagal memuat data modal:", err);
-        showLoading(false);
         body.innerHTML = `<p style="color:red;">❌ Gagal memuat data. Silakan coba lagi nanti.</p>`;
         showToast("Gagal memuat data absensi", () => openDetailModal(noLapak));
     }
@@ -504,6 +559,25 @@ function closeDetailModal() {
 }
 window.openDetailModal = openDetailModal;
 window.closeDetailModal = closeDetailModal;
+
+
+// Ambil semua tombol detail
+document.querySelectorAll(".detail-btn").forEach(button => {
+    button.addEventListener("click", function () {
+        // Cari parent card
+        const card = this.closest(".lapak-card");
+
+        // Ambil data nomor lapak & nama pedagang
+        const nomorLapak = card.querySelector(".lapak-number").textContent;
+        const namaPedagang = card.querySelector(".nama-pedagang").textContent;
+
+        // Set ke modal
+        document.getElementById("modalTitle").textContent = `${nomorLapak} - ${namaPedagang}`;
+
+        // Tampilkan modal
+        document.getElementById("absensiModal").style.display = "block";
+    });
+});
 
 // =================== Events ===================
 searchInput.addEventListener("input", () => { currentPage = 1; renderGrid(); });
@@ -605,5 +679,53 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-// =================== Init ===================
-fetchLapak();
+// ===== Rules Modal sebelum tabel =====
+function openRulesModal() {
+    const modal = document.getElementById("rulesModal");
+    if (modal) modal.classList.add("show");
+}
+
+function closeRulesModal() {
+    const modal = document.getElementById("rulesModal");
+    if (modal) modal.classList.remove("show");
+}
+
+function initRulesModal() {
+    // Selalu tampilkan modal rules saat pertama kali load
+    openRulesModal();
+
+    const confirmCheck = document.getElementById("confirmRules");
+    const agreeBtn = document.getElementById("agreeRules");
+
+    if (confirmCheck && agreeBtn) {
+        // Awalnya tombol tetap disabled
+        agreeBtn.disabled = true;
+
+        // Aktifkan tombol hanya jika checkbox dicentang
+        confirmCheck.addEventListener("change", () => {
+            agreeBtn.disabled = !confirmCheck.checked;
+        });
+
+        // Saat klik tombol Setuju
+        agreeBtn.addEventListener("click", () => {
+            // Ubah state tombol → loading
+            agreeBtn.disabled = true;
+            const oldText = agreeBtn.textContent;
+            agreeBtn.textContent = "⏳ Memuat...";
+
+            closeRulesModal();
+            showToast("✅ Anda setuju dengan ketentuan lapak");
+
+            // Jalankan fetch data tabel
+            fetchLapak().finally(() => {
+                // Tombol tetap disabled agar tidak bisa diklik lagi
+                // Kembalikan teks tombol ke semula
+                agreeBtn.textContent = oldText;
+            });
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    initRulesModal();
+});
