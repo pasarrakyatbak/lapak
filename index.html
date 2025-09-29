@@ -7,6 +7,8 @@
     <title>Dashboard Lapak</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome (untuk ikon search dsb) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
@@ -18,6 +20,7 @@
             <button id="toggleTheme" class="theme-btn">🌙 Mode Gelap</button>
         </header>
 
+        <!-- Toolbar -->
         <div class="toolbar">
             <div class="search-box">
                 <i class="fas fa-search"></i>
@@ -56,9 +59,11 @@
                 </select>
             </div>
         </div>
+
         <button class="btn-denah" onclick="openDenah()">📍 Lihat Denah</button>
         <div id="lapakGrid" class="grid-container"></div>
     </div>
+
     <!-- Loading -->
     <div id="loading">
         <div class="spinner"></div>
@@ -76,6 +81,7 @@
             <button class="btn" onclick="closeDetailModal()">Tutup</button>
         </div>
     </div>
+
     <!-- Modal Denah -->
     <div id="denahModal" class="modal">
         <div class="modal-content denah-content">
@@ -84,6 +90,71 @@
             <iframe src="https://pasarrakyatbak.github.io/denah/" class="denah-frame"></iframe>
         </div>
     </div>
+
+    <!-- Modal Aturan Wajib -->
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <h2>📌 Ketentuan Lapak</h2>
+            <div class="rules-text">
+                <ul>
+                    <li>
+                        <strong>Absen 3x berturut-turut</strong> + <strong>tidak bayar retribusi minimal 1x</strong>
+                        → <em>Lapak dianggap hangus</em>.
+                        📌 <u>Alasan:</u> untuk memberi kesempatan kepada pelapak lain yang lebih aktif.
+                        ⚡ <u>Konsekuensi:</u> lapak langsung <em>dialihkan ke calon pelapak dalam waiting list</em>.
+                    </li>
+
+                    <li>
+                        <strong>Izin 3x berturut-turut</strong> + <strong>tidak bayar retribusi minimal 1x</strong>
+                        → <em>Lapak dianggap hangus</em>.
+                        📌 <u>Alasan:</u> supaya lapak tidak kosong terus-menerus dan bisa dipakai oleh pelapak lain
+                        yang sudah antre di <em>waiting list</em>.
+                        ⚡ <u>Konsekuensi:</u> hak atas lapak dicabut dan langsung <em>dialihkan ke calon pelapak waiting
+                            list</em>.
+                    </li>
+                    <li>
+                        <strong>Lapak dipakai orang lain</strong> tanpa izin resmi panitia
+                        → tetap <em>dianggap tidak hadir</em> bagi pemilik asli.
+                        📌 <u>Alasan:</u> untuk menjaga ketertiban dan kejelasan kepemilikan lapak.
+                        ⚡ <u>Konsekuensi:</u> pemilik lapak bisa kehilangan hak atas lapak jika pelanggaran berulang.
+                    </li>
+
+                    <li>
+                        <strong>Tidak ikut Jumpa Pelapak sebanyak 3x</strong>
+                        → mendapat <em>sanksi langsung dari ketua panitia</em>.
+                        📌 <u>Alasan:</u> Jumpa Pelapak adalah forum komunikasi penting.
+                        ⚡ <u>Konsekuensi:</u> sanksi bisa berupa teguran lisan maupun tertulis, atau evaluasi
+                        keanggotaan pelapak.
+                    </li>
+
+                    <li>
+                        <strong>Lapak hangus</strong> → untuk daftar ulang dikenakan biaya
+                        <strong>Rp30.000 per lapak (180 cm)</strong>.
+                        ⚠️ <em>Tidak otomatis kembali ke tempat lama</em>.
+                        📌 <u>Alasan:</u> untuk mengatur ulang posisi, menjaga keadilan, dan memberi kesempatan pelapak
+                        baru.
+                        ⚡ <u>Konsekuensi:</u>
+                        - Lokasi lama bisa ditempati orang lain.
+                        - Jika ingin jualan lagi, pelapak wajib masuk <em>waiting list</em> dan menunggu ada lapak
+                        kosong/hangus.
+                    <li>
+                        <strong>Dilarang parkir di area lapak kosong</strong>.
+                        📌 <u>Alasan:</u> area kosong disiapkan untuk calon pelapak baru atau keperluan panitia.
+                        ⚡ <u>Konsekuensi:</u> kendaraan wajib dipindahkan ke <em>parkir resmi panitia</em>, jika
+                        melanggar bisa kena teguran.
+                    </li>
+                </ul>
+
+            </div>
+            <div class="rules-confirm">
+                <input type="checkbox" id="confirmRules"> Saya sudah membaca & setuju
+            </div>
+            <div class="rules-actions">
+                <button class="btn" id="agreeRules" disabled>✅ Setuju</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toast"></div>
 
