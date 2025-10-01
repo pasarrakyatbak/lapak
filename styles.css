@@ -700,6 +700,113 @@ body.dark .card .barang {
     --rule-bg: #f9f9f9;
 }
 
+/* ===== Badge 2x & 3x Interaktif ===== */
+.status-tidakhadir2x,
+.status-tidakhadir3x {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Ikon */
+.status-tidakhadir2x::before {
+    content: "⚠️";
+    font-size: 0.9rem;
+}
+
+.status-tidakhadir3x::before {
+    content: "⚠️⚠️";
+    font-size: 0.9rem;
+}
+
+/* Gradien & Warna Awal */
+.status-tidakhadir2x {
+    background: linear-gradient(135deg, #fff4e5, #ffe0b2);
+    color: #ff7a00;
+    border: 1px solid #ffb347;
+}
+
+.status-tidakhadir3x {
+    background: linear-gradient(135deg, #ffe5e5, #ffb2b2);
+    color: #d60000;
+    border: 1px solid #ff7a7a;
+}
+
+/* Shimmer */
+.status-tidakhadir2x::after,
+.status-tidakhadir3x::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.0), rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.0));
+    transform: skewX(-20deg);
+    animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -50%;
+    }
+
+    100% {
+        left: 125%;
+    }
+}
+
+/* Hover */
+.status-tidakhadir2x:hover,
+.status-tidakhadir3x:hover {
+    cursor: default;
+}
+
+/* Animasi interaktif (denyut) */
+.pulse {
+    animation: pulseBadge 1s ease-in-out 3;
+}
+
+@keyframes pulseBadge {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .status-tidakhadir2x {
+        background: linear-gradient(135deg, #3b2f1a, #5c4323);
+        color: #ffc57a;
+        border: 1px solid #ff9f43;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .status-tidakhadir3x {
+        background: linear-gradient(135deg, #4a1a1a, #703232);
+        color: #ff9999;
+        border: 1px solid #ff4a4a;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+}
+
 /* ===== Dark Mode ===== */
 @media (prefers-color-scheme: dark) {
     :root {
