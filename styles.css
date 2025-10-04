@@ -5,7 +5,51 @@ body {
     font-family: 'Poppins', sans-serif;
     transition: background 0.3s, color 0.3s;
 }
+:root {
+    --waiting-bg: #fff3cd;
+    --waiting-text: #7a5d00;
 
+    --done-bg: #d1fae5;
+    --done-text: #065f46;
+
+    --badge-shadow: rgba(0, 0, 0, 0.08);
+}
+
+/* Dark Mode */
+body.dark {
+    --waiting-bg: #b38b2b;
+    --waiting-text: #fff3cd;
+
+    --done-bg: #064e3b;
+    --done-text: #a7f3d0;
+
+    --badge-shadow: rgba(0, 0, 0, 0.4);
+}
+
+/* Badge umum */
+.status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    /* full pill */
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px var(--badge-shadow);
+    transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Badge waiting */
+.status-badge.status-belumbayar {
+    background: var(--waiting-bg);
+    color: var(--waiting-text);
+}
+
+/* Badge done */
+.status-badge.status-done {
+    background: var(--done-bg);
+    color: var(--done-text);
+}
 .modal-header-info {
     background: linear-gradient(135deg, #4e54c8, #8f94fb);
     color: #fff;
