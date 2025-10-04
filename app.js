@@ -222,7 +222,13 @@ async function renderGrid() {
             const res = await fetch(API_WAITING_LIST);
             if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
             const json = await res.json();
-            arr = Array.isArray(json.data) ? json.data : [];
+            const data = Array.isArray(json.data) ? json.data : [];
+
+            // filter hanya waiting & done
+            arr = data.filter(l => {
+                const status = (l.status || "").toLowerCase();
+                return status === "waiting" || status === "done";
+            });
         }
 
         // ======= Tidak Hadir (2x / 3x) =======
@@ -253,6 +259,7 @@ async function renderGrid() {
                 arr = Array.isArray(json.data) ? json.data : [];
             }
         }
+
         // ======= Filter Lokal (Kosong / Terisi) =======
         else {
             arr = lapakData.filter(l => {
@@ -294,15 +301,26 @@ async function renderGrid() {
             let html = "";
 
             if (statusFilter === "waitinglist") {
+                // tentukan badge sesuai status
+                let badgeClass = "status-belumbayar"; // default kuning
+                let badgeText = "Waiting ⏳";
+
+                if (l.status && l.status.toLowerCase() === "done") {
+                    badgeClass = "status-done"; // hijau
+                    badgeText = "Done ✅";
+                }
+
                 html = `
-                    <div class="card">
-                        <div class="status-badge status-belumbayar">Waiting List</div>
-                        <h3>Antrian ${l.no || "-"}</h3>
-                        <p>👤 <span class="nama">${l.nama}</span></p>
-                        <hr>
-                        <p>🛒 <span class="barang">${l.jualan || "-"}</span></p>
-                    </div>
-                `;
+        <div class="card">
+            <div class="status-badge ${badgeClass}">${badgeText}</div>
+            <h3>Antrian ${l.no || "-"}</h3>
+            <p>👤 <span class="nama">${l.nama}</span></p>
+            <p>📍 ${l.alamat || "-"}</p>
+            <hr>
+            <p>🛒 <span class="barang">${l.jualan || "-"}</span></p>
+        </div>
+    `;
+
             } else if (["2x", "3x"].includes(statusFilter)) {
                 html = renderTidakHadirCardNew(l);
             } else if (statusFilter === "izin") {
@@ -328,7 +346,6 @@ async function renderGrid() {
         renderPlaceholderByCategory(statusFilter);
     }
 }
-
 // =================== Render Tidak Hadir Card (2x / 3x) ===================
 function renderTidakHadirCardNew(l, type = "default") {
     const { nama, barang } = parseNamaBarang(l.nama || "");
