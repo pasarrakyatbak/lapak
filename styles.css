@@ -1485,3 +1485,17 @@ body.dark #lapakGrid .card {
         padding: 0.5rem;
     }
 }
+/* HP kecil (max 480px) */
+@media screen and (max-width: 480px) {
+    /* Search box input */
+    .search-box input {
+        padding: 0.55rem 0.9rem 0.55rem 2.6rem; /* ruang cukup buat icon */
+        font-size: 0.85rem;
+    }
+
+    /* Select box select */
+    .select-box select {
+        padding: 0.55rem 0.8rem; 
+        font-size: 0.8rem;
+    }
+}
